@@ -75,7 +75,7 @@ def expand_query():
     if request.method == 'POST':
         query = request.json.get("query", "")
         tokenized_query = [w[0] for w in model.tokenize(query)]
-        expanded_query = model.expand_query(tokenized_query)
+        expanded_query = model.expand_query(query)
         return jsonify({
             "initial_query" : query,
             "tokenized_query" : tokenized_query,

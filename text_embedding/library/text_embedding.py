@@ -195,7 +195,7 @@ class TextEmbedding:
         # return the embedding in vanilla python object
         return __text_embedding.tolist()
 
-    def expand_query(self, tokens):
+    def expand_query(self, query):
         """
         Uses the embedding model to expand users query. 
 
@@ -208,7 +208,12 @@ class TextEmbedding:
                 expanded tokenized users query
         """
 
-        return query_expansion.extend_tokens(tokens, self.__embedding)
+        return query_expansion.pre_retrieval_KNN(
+            query=query,
+            k=5,
+            wv=self.__embedding,
+            n=50,
+            stop_words=self.__stopwords)
 
 
     def __train_projection_matrix(self, matrix):
