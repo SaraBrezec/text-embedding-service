@@ -24,6 +24,8 @@ from sklearn.decomposition import PCA
 import numpy as np
 import operator
 
+from ..library import query_expansion
+
 class TextEmbedding:
 
     def __init__(self, language, model_path, model_format='word2vec'):
@@ -192,6 +194,21 @@ class TextEmbedding:
 
         # return the embedding in vanilla python object
         return __text_embedding.tolist()
+
+    def expand_query(self, tokens):
+        """
+        Uses the embedding model to expand users query. 
+
+        Parameters:
+            tokens : list of str
+                tokenized users query
+        
+        Returns 
+            list of str
+                expanded tokenized users query
+        """
+
+        return query_expansion.extend_tokens(tokens, self.__embedding)
 
 
     def __train_projection_matrix(self, matrix):

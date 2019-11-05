@@ -69,3 +69,17 @@ def create():
             "embedding": text_embedding,
             "text": text
         })
+
+@bp.route('/expand', methods=['POST'])
+def expand_query():
+    if request.method == 'POST':
+        query = request.json.get("query", "")
+        tokenized_query = [w[0] for w in model.tokenize(query)]
+        expanded_query = model.expand_query(tokenized_query)
+        return jsonify({
+            "initial_query" : query,
+            "tokenized_query" : tokenized_query,
+            "expanded_query" : expanded_query
+        })
+    else:
+        return jsonify(["Method {} is not allowed!".format(request.method)])
