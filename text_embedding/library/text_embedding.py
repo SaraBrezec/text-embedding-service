@@ -48,6 +48,8 @@ class TextEmbedding:
         if not model_path == None:
             if os.path.isfile(model_path):
                 self.__load_model(model_path, model_format)
+            else:
+                raise Exception("TextEmbedding.__init__: model_path does not exist {}".format(model_path))
         else:
             raise Exception("TextEmbedding.__init__: model_path does not exist {}".format(model_path))
 
@@ -75,6 +77,7 @@ class TextEmbedding:
             raise Exception("TextEmbedding.__load_model: Model '{}' not supported (must be 'word2vec' or 'fasttext').".format(model_format) +
                             " Cannot load word embedding model.")
 
+        self.__stopwords = []
         # calculate the default projection matrix
         v = np.zeros(self.__embedding.vector_size, dtype=np.float32)
         self.__projection_matrix = np.outer(v, v)
@@ -243,8 +246,6 @@ class TextEmbedding:
 
         with open(path, 'wb') as output:
             pickle.dump(self.__projection_matrix, output, pickle.HIGHEST_PROTOCOL)
-
-
 
 
     def load_projection_matrix(self, path):
