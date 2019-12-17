@@ -1,18 +1,46 @@
 from gensim.models import KeyedVectors
 import numpy as np
+import nltk
 from nltk.corpus   import stopwords
 from nltk.tokenize import word_tokenize
 import string
+from nltk.corpus import wordnet
+from nltk.stem import WordNetLemmatizer 
+lemmatizer = WordNetLemmatizer() 
 
-def tokenize(text, stopwords):
-    """Tokenizes and removes stopwords from the document"""
+def get_wordnet_pos(word):
+    """Map POS tag to first character lemmatize() accepts"""
+    tag = nltk.pos_tag([word])[0][1][0].upper()
+    tag_dict = {"J": wordnet.ADJ,
+                "N": wordnet.NOUN,
+                "V": wordnet.VERB,
+                "R": wordnet.ADV}
+
+    return tag_dict.get(tag, wordnet.NOUN)
+
+
+
+def tokenized_query(text, stopwords):
+    """Tokenizes, lowers words and removes stopwords from the document.
+        Args:
+            text (str): Text we want to tokenize.
+            stopwords (list): List of words we want to remove from the tokenized text. 
+        Returns:
+            filtered_tokens (list): List of low case tokens wich does not contain stop words.
+        """
     without_punctuations = text.translate(str.maketrans('', '', string.punctuation))
     tokens = word_tokenize(without_punctuations)
-    filtered = [w.lower() for w in tokens if not w in stopwords]
+    filtered = ([lemmatizer.lemmatize(w.lower(), get_wordnet_pos(w.lower())) for w in tokens if not w in stopwords])
     return filtered
 
 def extend_tokens(token_list, wv):
-    """Extends token list summing vector pairs"""
+    """Extends token list by summing consecutive vector pairs.
+        Args: 
+            token_list (list): List of tokens we want to extend.
+        Returns:
+            extension (list): List of extensions.
+            wv (Word2VecKeyedVectors): Word embeddings.
+        """
     tokens = []
     for token in token_list:
         # check if the token is in the vocabulary
@@ -26,7 +54,14 @@ def extend_tokens(token_list, wv):
     return extention
 
 def candidate_expansion_terms(tokens, k, wv):
-    """Gets the candidate expansion terms"""
+    """Gets the candidates for expansion based on kNN.
+        Args: 
+            tokens (list): List of tokens we want to expand.
+            k (int): Number of nearest neighbours.
+            wv (Word2VecKeyedVectors): Word embeddings.
+        Returns:
+            candidates (list): List of candidates.
+        """
     candidates = set()
     for token in tokens:
         # check if the token is in the vocabulary
@@ -41,7 +76,14 @@ def candidate_expansion_terms(tokens, k, wv):
     return candidates
 
 def similarity(token, token_list, wv ):
-    """calculates the similarity between word and list of words"""
+    """Calculates the similarity between token and list of tokens.
+        Args: 
+            token (str): String for wich we are calculating similarity.
+            token_list (list): List of tokens to wich we are calculating similarity of token.
+            wv (Word2VecKeyedVectors): Word embeddings.
+        Returns:
+            avreage_similarity (float): Number that signifes the similarity of token to token list words.
+        """
     # calculate the similarity of the token to all tokens
     similarity = 0
     num_of_tokens = 0
@@ -53,7 +95,14 @@ def similarity(token, token_list, wv ):
     return similarity/num_of_tokens
 
 def get_similarity_pairs(tokens, candidates, wv):
-    """Gets the actual expansion terms"""
+    """Calculates similarity to tokens for list of candidates.
+        Args: 
+            tokens (list): List of tokens to wich similarity is calculated
+            candidates (list): List of tokens for wich similarity is calculated.
+            wv (Word2VecKeyedVectors): Word embeddings.
+        Returns:
+            similarity_pairs (list): List of tuples. Tuples are pairs of candidates and their similarity to tokens.
+        """
     similarity_pairs = []
     for candidate in candidates:
         sim = similarity(candidate, tokens, wv)
@@ -61,9 +110,20 @@ def get_similarity_pairs(tokens, candidates, wv):
     # return the list of expansion terms with their similarities
     return similarity_pairs
 
+# updated function
 def pre_retrieval_KNN(query, k, wv, n, stop_words,extension=False):
-    """Find the most similar tokens(candidates) to the given query, optional:query can be extended, then the candidates are found for extended query"""
-    tokens = tokenize(query, stop_words)
+    """Find n most similar tokens(candidates) to the given query, optional: 
+        query can be extended, then the candidates are found for extended query.
+        Args: 
+            query (string): User query we want to expand.
+            k (int): Number of nearest neighbours.
+            wv (Word2VecKeyedVectors): Word embeddings.
+            n (int): Number of candidates (with the highest simiarity) that is returned.
+            stopwords (list): List of words we want to remove from the tokenized text. 
+        Returns:
+            candidate_list (list): List of n candidates with the highest similarity to query tokens.
+        """
+    tokens = tokenized_query(query, stop_words)
     if extension:
         extended = extend_tokens(tokens,wv)
         candidates = candidate_expansion_terms(tokens+extended, k, wv)
@@ -74,8 +134,11 @@ def pre_retrieval_KNN(query, k, wv, n, stop_words,extension=False):
     def takeSecond(elem):
         return elem[1]
     sort = sorted(candidates_sim, key=takeSecond)[::-1]
-    sort = sort[:n]
     candidate_list = []
     for tupl in sort:
         candidate_list.append(tupl[0])
+    cleaned = [word for word in candidate_list if word.isalpha()]
+    lemmatized = [lemmatizer.lemmatize(word, get_wordnet_pos(word)) for word in cleaned]
+    candidate_list = [w for w in lemmatized if w not in tokens]
+    candidate_list = candidate_list[:n]
     return candidate_list

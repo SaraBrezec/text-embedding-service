@@ -77,7 +77,7 @@ class TextEmbedding:
             raise Exception("TextEmbedding.__load_model: Model '{}' not supported (must be 'word2vec' or 'fasttext').".format(model_format) +
                             " Cannot load word embedding model.")
 
-        self.__stopwords = []
+        
         # calculate the default projection matrix
         v = np.zeros(self.__embedding.vector_size, dtype=np.float32)
         self.__projection_matrix = np.outer(v, v)
@@ -202,20 +202,18 @@ class TextEmbedding:
         """
         Uses the embedding model to expand users query. 
 
-        Parameters:
-            tokens : list of str
-                tokenized users query
+        Srgs:
+            query : users query
         
-        Returns 
-            list of str
-                expanded tokenized users query
+        Returns:
+            list of strings:  most similar tokens(candidates) to the given query
         """
 
         return query_expansion.pre_retrieval_KNN(
             query=query,
-            k=5,
+            k=10,
             wv=self.__embedding,
-            n=50,
+            n=5,
             stop_words=self.__stopwords)
 
 

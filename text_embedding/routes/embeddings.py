@@ -70,8 +70,18 @@ def create():
             "text": text
         })
 
-@bp.route('/expand', methods=['POST'])
+@bp.route('/expand', methods=['GET','POST'])
 def expand_query():
+    if request.method == 'GET':
+        # retrieve the correct query parameters
+        query = request.args.get('query', default='', type=str)
+        tokenized_query =  [w[0] for w in model.tokenize(query)]
+        expanded_query = model.expand_query(query)
+        return jsonify({
+            "initial_query" : query,
+            "tokenized_query" : tokenized_query,
+            "expanded_query" : expanded_query
+        })
     if request.method == 'POST':
         query = request.json.get("query", "")
         tokenized_query = [w[0] for w in model.tokenize(query)]
