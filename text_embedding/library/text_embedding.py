@@ -103,7 +103,7 @@ class TextEmbedding:
         """
 
         # create stopword file path
-        fname = "./data/stopwords/{}.stopwords.txt".format(self.__language)
+        fname= "./data/stopwords/{}.stopwords.txt".format(self.__language)
 
         # check if the file exists
         if not os.path.isfile(fname):
@@ -198,7 +198,7 @@ class TextEmbedding:
         # return the embedding in vanilla python object
         return __text_embedding.tolist()
 
-    def expand_query(self, query):
+    def expand_query(self, query, model_format):
         """
         Uses the embedding model to expand users query. 
 
@@ -214,7 +214,8 @@ class TextEmbedding:
             k=10,
             wv=self.__embedding,
             n=5,
-            stop_words=self.__stopwords)
+            stop_words=self.__stopwords,
+            model_format=model_format)
 
 
     def __train_projection_matrix(self, matrix):

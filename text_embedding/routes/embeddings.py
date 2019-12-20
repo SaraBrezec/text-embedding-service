@@ -19,7 +19,7 @@ from ..library.text_embedding import TextEmbedding
 model_path = app.config['MODEL_PATH']
 model_format = app.config['MODEL_FORMAT']
 language = app.config['MODEL_LANGUAGE']
-
+# model_format = 'fasttext'
 # initialize text embedding model
 model = TextEmbedding(language=language, model_path=model_path, model_format=model_format)
 
@@ -75,21 +75,27 @@ def expand_query():
     if request.method == 'GET':
         # retrieve the correct query parameters
         query = request.args.get('query', default='', type=str)
-        tokenized_query =  [w[0] for w in model.tokenize(query)]
-        expanded_query = model.expand_query(query)
-        return jsonify({
-            "initial_query" : query,
-            "tokenized_query" : tokenized_query,
-            "expanded_query" : expanded_query
-        })
+
     if request.method == 'POST':
         query = request.json.get("query", "")
+
+    if query == '':
+        raise Exception("Query empty or not given")
+
+    try:
         tokenized_query = [w[0] for w in model.tokenize(query)]
-        expanded_query = model.expand_query(query)
+        expanded_query = model.expand_query(query,model_format)
         return jsonify({
             "initial_query" : query,
             "tokenized_query" : tokenized_query,
             "expanded_query" : expanded_query
         })
+
+    except Exception as e:
+        # get exception
+        # TODO: log exception
+        # something went wrong with the request
+        return abort(400, str(e))
+
     else:
         return jsonify(["Method {} is not allowed!".format(request.method)])
