@@ -60,7 +60,14 @@ def extend_tokens(token_list, model):
     return extention
 
 def candidate_expansion_terms(tokens, k, model, model_format):
-    """Gets the candidate expansion terms"""
+    """Gets the candidates for expansion based on kNN.
+        Args: 
+            tokens (list): List of tokens we want to expand.
+            k (int): Number of nearest neighbours.
+            wv (Word2VecKeyedVectors): Word embeddings.
+        Returns:
+            candidates (list): List of candidates.
+    """
     candidates = set()
     if model_format == 'word2vec':
         for token in tokens:
@@ -87,7 +94,14 @@ def candidate_expansion_terms(tokens, k, model, model_format):
     return candidates
 
 def similarity(token, token_list, model, model_format ):
-    """calculates the similarity between word and list of words"""
+    """Calculates the similarity between token and list of tokens.
+        Args: 
+            token (str): String for wich we are calculating similarity.
+            token_list (list): List of tokens to wich we are calculating similarity of token.
+            wv (Word2VecKeyedVectors): Word embeddings.
+        Returns:
+            avreage_similarity (float): Number that signifes the similarity of token to token list words.
+        """
     # calculate the similarity of the token to all tokens
     similarity = 0
     num_of_tokens = 0
